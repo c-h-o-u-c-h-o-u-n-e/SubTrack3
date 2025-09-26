@@ -1,0 +1,302 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Import custom font */
+@font-face {
+  font-family: 'WF Visual Sans';
+  src: url('/fonts/WFVisualSans-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Global scrollbar styles */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #665c54 #3c3836;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: #3c3836;
+  border-radius: 4px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #665c54;
+  border-radius: 4px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #7c6f64;
+}
+
+/* Custom scrollbar for modals */
+.custom-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.custom-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* Remove all borders on active/focus states */
+*:focus,
+*:active,
+*:focus-visible,
+input:focus,
+input:active,
+textarea:focus,
+textarea:active,
+button:focus,
+button:active,
+select:focus,
+select:active {
+  border: none !important;
+  outline: none !important;
+}
+
+/* Remove default browser focus rings */
+*:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Ensure custom focus styles work */
+.focus\:ring-2:focus {
+  border: none !important;
+}
+
+/* Remove number input arrows/spinners */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+/* Filter section animations - Redesigned */
+.filter-section {
+  transition: all 0.3s ease-out;
+  overflow: hidden;
+}
+
+.filter-enter {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+.filter-exit {
+  animation: fadeOut 0.3s ease-in forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+/* View transition animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeOutDown {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+}
+
+.view-enter {
+  animation: fadeInUp 0.4s ease-out forwards;
+}
+
+.view-exit {
+  animation: fadeOutDown 0.3s ease-in forwards;
+}
+
+/* Masonry layout styles */
+.columns-1 {
+  column-count: 1;
+  column-gap: 1.5rem;
+  column-fill: balance;
+}
+
+.columns-2 {
+  column-count: 2;
+  column-gap: 1.5rem;
+  column-fill: balance;
+}
+
+@media (max-width: 768px) {
+  .md\:columns-2 {
+    column-count: 1;
+  }
+}
+
+.break-inside-avoid {
+  break-inside: avoid;
+  page-break-inside: avoid;
+  display: inline-block;
+  width: 100%;
+}
+/* Card expansion animations */
+.card-details {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.card-details-enter {
+  animation: cardExpandIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+.card-details-exit {
+  animation: cardCollapseOut 0.3s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+@keyframes cardExpandIn {
+  0% {
+    max-height: 0;
+    opacity: 0;
+    transform: scaleY(0) translateY(-10px);
+    transform-origin: top;
+  }
+  30% {
+    max-height: 200px;
+    opacity: 0.4;
+    transform: scaleY(0.3) translateY(-5px);
+  }
+  70% {
+    max-height: 400px;
+    opacity: 0.8;
+    transform: scaleY(0.9) translateY(-2px);
+  }
+  100% {
+    max-height: 600px;
+    opacity: 1;
+    transform: scaleY(1) translateY(0);
+  }
+}
+
+@keyframes cardCollapseOut {
+  0% {
+    max-height: 600px;
+    opacity: 1;
+    transform: scaleY(1) translateY(0);
+  }
+  30% {
+    max-height: 400px;
+    opacity: 0.7;
+    transform: scaleY(0.8) translateY(-2px);
+  }
+  70% {
+    max-height: 150px;
+    opacity: 0.3;
+    transform: scaleY(0.4) translateY(-5px);
+  }
+  100% {
+    max-height: 0;
+    opacity: 0;
+    transform: scaleY(0) translateY(-10px);
+  }
+}
+
+/* Masonry layout smooth transitions */
+.masonry-container {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.masonry-item {
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  will-change: transform, opacity;
+}
+
+.masonry-item-enter {
+  animation: masonryItemIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+.masonry-item-exit {
+  animation: masonryItemOut 0.3s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+/* Hide scrollbar but keep scrollable */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* Internet Explorer 10+ */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Safari and Chrome */
+}
+
+@keyframes masonryItemIn {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  60% {
+    opacity: 0.8;
+    transform: translateY(-5px) scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes masonryItemOut {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+}
+
+/* Card hover and interaction animations */
+.subscription-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform, box-shadow;
+}
+
+/* Smooth transitions for card content */
+.card-content {
+  transition: all 0.2s ease-out;
+}
