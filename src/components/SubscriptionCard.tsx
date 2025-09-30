@@ -21,13 +21,33 @@ import {
 import { Subscription } from '../types/Subscription';
 import { categoryLabels, frequencyDisplayLabels, formatCurrency, getDaysRemaining, calculateMonthlyAmount, formatDaysRemaining } from '../utils/subscriptionUtils';
 
-const paymentMethodLabels = {
-  cash: 'en argent comptant',
-  credit_card: 'par carte de crédit',
-  debit_card: 'par carte de débit',
-  crypto: 'en cryptomonnaie',
-  paypal: 'PayPal',
-  bank_transfer: 'Virement bancaire'
+const getPaymentMethodLabel = (paymentMethod: string) => {
+  // Try to get from localStorage first (custom payment methods)
+  try {
+    const paymentMethodSettings = localStorage.getItem('paymentMethodSettings');
+    if (paymentMethodSettings) {
+      const settings = JSON.parse(paymentMethodSettings);
+      if (settings[paymentMethod]) {
+        return settings[paymentMethod].label;
+      }
+    }
+  } catch (error) {
+    console.error('Error loading payment method settings:', error);
+  }
+  
+  // Fallback to default labels
+  const defaultLabels: Record<string, string> = {
+    cash: 'Argent comptant',
+    credit_card: 'Carte de crédit',
+    debit_card: 'Carte de débit',
+    prepaid_card: 'Carte prépayée',
+    crypto: 'Cryptomonnaie',
+    digital_wallet: 'Portefeuille numérique',
+    bank_transfer: 'Virement bancaire',
+    check: 'Chèque'
+  };
+  
+  return defaultLabels[paymentMethod] || paymentMethod;
 };
 
 interface SubscriptionCardProps {
@@ -103,6 +123,8 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
 }) => {
   const [isAnimating, setIsAnimating] = useState(false);
   const [animationClass, setAnimationClass] = useState('');
+  const [hoveredAction, setHoveredAction] = useState<string | null>(null);
+  const [showTooltip, setShowTooltip] = useState(false);
   const settings = useAppSettings();
   
   // Force expanded state for list view
@@ -249,29 +271,20 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
               </div>
             )}
             
-            {/* Name and Category */}
+            {/* Name and Category with Payment Delay */}
             <div className="min-w-0 flex-1 text-left pl-1">
-              <h3 className="text-lg font-normal text-gruvbox-fg0">
-                {subscription.name}
-              </h3>
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-normal text-gruvbox-fg0">
+                  {subscription.name}
+                </h3>
+                <span className={`text-md font-normal text-gruvbox-fg0 ${getUrgencyColor()}`}>
+                  {formatDaysRemaining(subscription.nextBilling)}
+                </span>
+              </div>
               <p className="text-sm text-gruvbox-fg0 opacity-80 truncate whitespace-nowrap">
                 {categoryLabels[subscription.category]}
               </p>
             </div>
-          </div>
-          
-          {/* Status Icons */}
-          <div className="flex items-center flex-shrink-0 space-x-2">
-            <span className={`text-md font-normal text-gruvbox-fg0 ${getUrgencyColor()}`}>
-              {formatDaysRemaining(subscription.nextBilling)}
-            </span>
-            {onViewDetails && (
-              <FontAwesomeIcon 
-                icon={faExternalLinkAlt} 
-                className="w-3 h-3 text-gruvbox-fg0 opacity-70" 
-                title="Voir l'historique complet"
-              />
-            )}
           </div>
         </div>
       </div>
@@ -291,54 +304,110 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
             </div>
             {/* Payment Method */}
             <div className="text-sm text-gruvbox-fg3 mt-1">
-              {paymentMethodLabels[subscription.paymentMethod as keyof typeof paymentMethodLabels] || subscription.paymentMethod}
+              {getPaymentMethodLabel(subscription.paymentMethod)}
             </div>
           </div>
           
-          <div className="flex items-center space-x-2 mt-1">
-            <button
-              onClick={() => onEdit(subscription)}
-              className="pr-2 text-gruvbox-fg3 hover:text-gruvbox-blue-bright rounded-lg transition-all duration-150 focus:outline-none"
-            >
-              <FontAwesomeIcon icon={faPenToSquare} className="w-4 h-4" />
-            </button>
-            {onCancel && subscription.status !== 'cancelled' && (
+          <div className="flex flex-col items-end relative">
+            <div className="flex items-center space-x-2 mt-1">
               <button
-                onClick={() => onCancel(subscription.id)}
-                className="text-gruvbox-fg3 hover:text-gruvbox-yellow-bright rounded-lg transition-all duration-150 focus:outline-none"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onEdit(subscription);
+                }}
+                onMouseEnter={() => {
+                  setHoveredAction('Éditer l\'abonnement');
+                  setShowTooltip(true);
+                }}
+                onMouseLeave={() => {
+                  setHoveredAction(null);
+                  setShowTooltip(false);
+                }}
+                className="pr-2 text-gruvbox-fg3 hover:text-gruvbox-blue-bright rounded-lg transition-all duration-150 focus:outline-none"
               >
-                <FontAwesomeIcon icon={faBan} className="pr-2 w-4 h-4" />
+                <FontAwesomeIcon icon={faPenToSquare} className="w-4 h-4" />
               </button>
-            )}
-            {onReactivate && subscription.status === 'cancelled' && (
+              {onCancel && subscription.status !== 'cancelled' && (
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onCancel(subscription.id);
+                  }}
+                  onMouseEnter={() => {
+                    setHoveredAction('Résilier l\'abonnement');
+                    setShowTooltip(true);
+                  }}
+                  onMouseLeave={() => {
+                    setHoveredAction(null);
+                    setShowTooltip(false);
+                  }}
+                  className="text-gruvbox-fg3 hover:text-gruvbox-yellow-bright rounded-lg transition-all duration-150 focus:outline-none"
+                >
+                  <FontAwesomeIcon icon={faBan} className="pr-2 w-4 h-4" />
+                </button>
+              )}
+              {onReactivate && subscription.status === 'cancelled' && (
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onReactivate(subscription.id);
+                  }}
+                  onMouseEnter={() => {
+                    setHoveredAction('Réactiver l\'abonnement');
+                    setShowTooltip(true);
+                  }}
+                  onMouseLeave={() => {
+                    setHoveredAction(null);
+                    setShowTooltip(false);
+                  }}
+                  className="text-gruvbox-fg3 hover:text-gruvbox-green-bright rounded-lg transition-all duration-150 focus:outline-none"
+                >
+                  <FontAwesomeIcon icon={faRotateRight} className="pr-2 w-4 h-4" />
+                </button>
+              )}
               <button
-                onClick={() => onReactivate(subscription.id)}
-                className="text-gruvbox-fg3 hover:text-gruvbox-green-bright rounded-lg transition-all duration-150 focus:outline-none"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onDelete(subscription.id);
+                }}
+                onMouseEnter={() => {
+                  setHoveredAction('Supprimer l\'abonnement');
+                  setShowTooltip(true);
+                }}
+                onMouseLeave={() => {
+                  setHoveredAction(null);
+                  setShowTooltip(false);
+                }}
+                className="px-0 text-gruvbox-fg3 hover:text-gruvbox-red-bright rounded-lg transition-all duration-150 focus:outline-none"
               >
-                <FontAwesomeIcon icon={faRotateRight} className="pr-2 w-4 h-4" />
+                <FontAwesomeIcon icon={faTrash} className="w-4 h-4" />
               </button>
+            </div>
+            {/* Action Description - positioned absolutely to not affect layout */}
+            {hoveredAction && (
+              <div className={`absolute top-full right-0 mt-2.5 transition-all duration-300 ease-out ${
+                showTooltip ? 'opacity-100 animate-in' : 'opacity-0'
+              }`}>
+                <span className={`text-sm transition-colors duration-300 whitespace-nowrap ${
+                  hoveredAction === 'Éditer l\'abonnement' ? 'text-gruvbox-blue-bright' :
+                  hoveredAction === 'Résilier l\'abonnement' ? 'text-gruvbox-yellow-bright' :
+                  hoveredAction === 'Réactiver l\'abonnement' ? 'text-gruvbox-green-bright' :
+                  hoveredAction === 'Supprimer l\'abonnement' ? 'text-gruvbox-red-bright' :
+                  'text-gruvbox-fg2'
+                }`}>
+                  {hoveredAction}
+                </span>
+              </div>
             )}
-            <button
-              onClick={() => onDelete(subscription.id)}
-              className="px-0 text-gruvbox-fg3 hover:text-gruvbox-red-bright rounded-lg transition-all duration-150 focus:outline-none"
-            >
-              <FontAwesomeIcon icon={faTrash} className="w-4 h-4" />
-            </button>
           </div>
         </div>
         
         {/* Action buttons */}
-        <div className="flex justify-between items-center mt-2">
-          {/* View Details Button */}
-          {onViewDetails && (
-            <button
-              onClick={() => onViewDetails(subscription.id)}
-              className="flex items-center space-x-2 text-sm text-gruvbox-blue-bright hover:text-gruvbox-blue transition-colors focus:outline-none"
-            >
-              <span>Voir l'historique</span>
-            </button>
-          )}
-          
+        <div className="flex justify-end items-center mt-3">
           {/* Voir plus de détails button - only in grid mode */}
           {viewMode === 'grid' && (
             <button
@@ -438,20 +507,6 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
             </>
           )}
 
-          {/* View Details Button */}
-          {onViewDetails && (
-            <>
-              <div className="border-t border-gruvbox-bg2 mt-4"></div>
-              <div className="pt-2">
-                <button
-                  onClick={() => onViewDetails(subscription.id)}
-                  className="w-full py-2 px-4 bg-gruvbox-blue bg-opacity-20 text-gruvbox-blue-bright rounded-lg hover:bg-opacity-30 transition-colors focus:outline-none"
-                >
-                  Voir l'historique complet
-                </button>
-              </div>
-            </>
-          )}
         </div>
       )}
 

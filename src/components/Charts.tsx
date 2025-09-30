@@ -125,7 +125,7 @@ export const Charts: React.FC<ChartsProps> = ({ subscriptions, onShowMonthlyTren
           </div>
         </div>
         
-        <div className="py-4 px-6 space-y-3">
+        <div className="py-4 px-6 space-y-3 bg-gruvbox-bg1 rounded-b-xl">
           {activeSubscriptions.length === 0 ? (
             <div className="text-center py-8">
               <div className="w-16 h-16 bg-gruvbox-bg1 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -195,7 +195,7 @@ export const Charts: React.FC<ChartsProps> = ({ subscriptions, onShowMonthlyTren
           </div>
         </div>
         
-        <div className="py-4 px-6 space-y-3">
+        <div className="py-4 px-6 space-y-3 bg-gruvbox-bg1 rounded-b-xl">
           {activeSubscriptions.length === 0 ? (
             <div className="text-center py-8">
               <div className="w-16 h-16 bg-gruvbox-bg1 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -265,7 +265,7 @@ export const Charts: React.FC<ChartsProps> = ({ subscriptions, onShowMonthlyTren
           </div>
         </div>
 
-        <div className="py-4 px-6 space-y-3">
+        <div className="py-4 px-6 space-y-3 bg-gruvbox-bg1 rounded-b-xl">
           {activeSubscriptions.length === 0 ? (
             <div className="text-center py-8">
               <div className="w-16 h-16 bg-gruvbox-bg1 rounded-full flex items-center justify-center mx-auto mb-4">

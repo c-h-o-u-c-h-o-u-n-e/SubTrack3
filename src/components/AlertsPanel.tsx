@@ -36,7 +36,7 @@ export const AlertsPanel: React.FC<AlertsPanelProps> = ({ alerts, subscriptions,
           </div>
         </div>
         
-        <div className="py-4 px-6 space-y-3">
+        <div className="py-4 px-6 space-y-3 bg-gruvbox-bg1 rounded-b-xl">
           <div className="text-center py-8">
             <div className="w-16 h-16 bg-gruvbox-bg1 rounded-full flex items-center justify-center mx-auto mb-4">
               <FontAwesomeIcon icon={faCheckCircle} className="w-8 h-8 text-gruvbox-fg4" />
@@ -76,7 +76,7 @@ export const AlertsPanel: React.FC<AlertsPanelProps> = ({ alerts, subscriptions,
         </div>
       </div>
 
-      <div className="px-4 pt-2 pb-4 space-y-2">
+      <div className="px-4 pt-2 pb-4 space-y-2 bg-gruvbox-bg1 rounded-b-xl">
         {alerts.map((alert) => {
           const getUrgencyColor = () => {
             if (alert.urgency === 'high') return 'text-gruvbox-red-bright';

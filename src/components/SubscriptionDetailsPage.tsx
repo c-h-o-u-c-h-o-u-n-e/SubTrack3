@@ -106,24 +106,17 @@ export const SubscriptionDetailsPage: React.FC<SubscriptionDetailsPageProps> = (
     setActiveSection(sectionId);
   };
   
-  // Animation effect - Force document body to be scrollable when component unmounts
+  // Animation effect - Prevent background scroll when modal is open
   useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (isVisible) {
-        document.body.style.overflow = 'hidden';
-      } else {
-        // Use setTimeout to ensure this happens after animation completes
-        setTimeout(() => {
-          document.body.style.overflow = '';
-        }, 350); // Slightly longer than animation duration
-      }
-    };
-    
-    handleVisibilityChange();
+    if (isVisible) {
+      document.body.classList.add('modal-open');
+    } else {
+      document.body.classList.remove('modal-open');
+    }
     
     return () => {
       // Always ensure body is scrollable when component unmounts
-      document.body.style.overflow = '';
+      document.body.classList.remove('modal-open');
     };
   }, [isVisible]);
   
@@ -438,7 +431,7 @@ export const SubscriptionDetailsPage: React.FC<SubscriptionDetailsPageProps> = (
       <div
         className={`fixed inset-y-0 right-0 w-full md:w-3/5 lg:w-1/2 xl:w-2/5 bg-gruvbox-bg0 text-gruvbox-fg1 shadow-xl z-50 transition-transform duration-300 transform ${
           isVisible ? 'translate-x-0' : 'translate-x-[100%]'
-        } flex flex-col`}
+        } flex flex-col modal-container`}
       >
         {/* Header */}
         <div 

@@ -15,6 +15,7 @@ interface Subscription {
 
 interface SettingsModalProps {
   onClose: () => void;
+  initialSection?: string;
 }
 
 interface AppSettings {
@@ -137,10 +138,10 @@ const defaultSettings: AppSettings = {
   }
 };
 
-export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
+export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, initialSection = 'profile' }) => {
   const [settings, setSettings] = useState<AppSettings>(defaultSettings);
   const [hasChanges, setHasChanges] = useState(false);
-  const [activeSection, setActiveSection] = useState('profile');
+  const [activeSection, setActiveSection] = useState(initialSection);
   const [isVisible, setIsVisible] = useState(false);
   const [categorySettings, setCategorySettings] = useState(getCategorySettings());
   const [paymentMethodSettings, setPaymentMethodSettings] = useState(getPaymentMethodSettings());
@@ -178,10 +179,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
 
   // Animation d'entrée
   useEffect(() => {
-    document.body.style.overflow = 'hidden';
+    document.body.classList.add('modal-open');
     setIsVisible(true);
     return () => {
-      document.body.style.overflow = 'unset';
+      document.body.classList.remove('modal-open');
     };
   }, []);
 
@@ -851,13 +852,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
         const allCategoriesEnabled = enabledCategoryCount === totalCategoryCount;
 
         return (
-          <div className="flex flex-col h-full pr-8 pb-8">
+          <div className="flex flex-col h-full pr-8">
             <div className="flex items-center space-x-3">
               <FontAwesomeIcon icon={faFolderOpen} className="w-5 h-5 text-gruvbox-orange-bright" />
               <h3 className="text-lg font-normal text-gruvbox-fg1">Gestion des catégories</h3>
             </div>
 
-            <hr className="mt-4 mb-0 border-t border-gruvbox-bg1 w-full" />
+            <hr className="mt-4 mb-[22px] border-t border-gruvbox-bg1 w-full" />
 
             <div className="ml-8 flex flex-col flex-1 space-y-5">
               {/* Option pour les dossiers alphabétiques */}
@@ -1318,7 +1319,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
 
       case 'data': {
         return (
-          <div className="space-y-4">
+          <div className="space-y-4 pr-8">
             <div className="flex items-center space-x-3">
               <FontAwesomeIcon icon={faDatabase} className="w-5 h-5 text-gruvbox-orange-bright" />
               <h3 className="text-lg font-normal text-gruvbox-fg1">Gestion des données</h3>
@@ -1347,7 +1348,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
               
               <div className="space-y-4">
                 <h4 className="text-md font-normal text-gruvbox-fg2">Importer les données</h4>
-                <p className="text-xs text-gruvbox-fg3 leading-relaxed">
+                <p className="text-xs text-gruvbox-fg3 line">
                   Importez un fichier JSON précédemment exporté.
                 </p>
                     <p className="text-xs text-gruvbox-fg3 pb-4 line">
@@ -1371,7 +1372,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
 
       case 'reset': {
         return (
-          <div className="space-y-4">
+          <div className="space-y-4 pr-8">
             <div className="flex items-center space-x-3">
               <FontAwesomeIcon icon={faRotateLeft} className="w-5 h-5 text-gruvbox-red-bright" />
               <h3 className="text-lg font-normal text-gruvbox-fg1">Réinitialisation</h3>
@@ -1439,7 +1440,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
       <div
         className={`fixed inset-y-0 left-0 w-full md:w-3/5 lg:w-1/2 xl:w-2/5 bg-gruvbox-bg0 text-gruvbox-fg1 shadow-xl z-50 transition-transform duration-300 transform ${
           isVisible ? 'translate-x-0' : 'translate-x-[-100%]'
-        } flex flex-col`}
+        } flex flex-col modal-container`}
       >
         <div className="relative p-4 border-b border-gruvbox-bg1 bg-gruvbox-green-bright">
           {/* Matte overlay */}

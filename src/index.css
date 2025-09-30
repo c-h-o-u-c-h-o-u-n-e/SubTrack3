@@ -11,6 +11,38 @@
   font-display: swap;
 }
 
+/* Prevent content shift when scrollbar appears */
+html {
+  scrollbar-gutter: stable;
+  overflow-y: scroll;
+}
+
+/* For browsers that don't support scrollbar-gutter */
+@supports not (scrollbar-gutter: stable) {
+  html {
+    margin-right: calc(-1 * (100vw - 100%));
+  }
+}
+
+/* Ensure body takes full height and prevents horizontal overflow */
+body {
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* Prevent content shift in modal containers */
+.modal-container {
+  scrollbar-gutter: stable;
+}
+
+/* Prevent background scroll when modal is open */
+.modal-open {
+  overflow: hidden !important;
+  height: 100vh;
+  position: fixed;
+  width: 100%;
+}
+
 /* Global scrollbar styles */
 * {
   scrollbar-width: thin;
@@ -45,27 +77,44 @@
   scrollbar-width: none;  /* Firefox */
 }
 
-/* Remove all borders on active/focus states */
-*:focus,
-*:active,
-*:focus-visible,
+/* Remove borders only for form elements on focus/active states */
 input:focus,
 input:active,
 textarea:focus,
 textarea:active,
-button:focus,
-button:active,
 select:focus,
 select:active {
   border: none !important;
   outline: none !important;
 }
 
-/* Remove default browser focus rings */
+/* Remove default browser focus rings but preserve borders */
 *:focus-visible {
   outline: none !important;
   box-shadow: none !important;
 }
+
+/* Ensure buttons don't lose their borders on active/focus states */
+button:focus,
+button:active {
+  outline: none !important;
+  /* Preserve existing borders - don't override them */
+}
+
+/* Prevent any global border removal for container elements */
+.modal-container,
+.modal-container *,
+div,
+section,
+article,
+aside,
+nav,
+header,
+footer,
+main {
+  /* Preserve all existing borders */
+}
+
 
 /* Ensure custom focus styles work */
 .focus\:ring-2:focus {
@@ -299,4 +348,52 @@ input[type="number"] {
 /* Smooth transitions for card content */
 .card-content {
   transition: all 0.2s ease-out;
+}
+
+/* User account button shake animation */
+@keyframes shake-user-icon {
+  0%, 100% { transform: rotate(12deg) scale(1.1); }
+  25% { transform: rotate(-12deg) scale(1.1); }
+  50% { transform: rotate(12deg) scale(1.1); }
+  75% { transform: rotate(-12deg) scale(1.1); }
+}
+
+.animate-shake-user {
+  animation: shake-user-icon 0.6s ease-in-out !important;
+}
+
+/* Tooltip hover animations */
+@keyframes tooltipFadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes tooltipFadeOut {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.animate-in {
+  animation: tooltipFadeIn 0.3s ease-out forwards;
+}
+
+.fade-in {
+  animation: tooltipFadeIn 0.3s ease-out forwards;
+}
+
+.slide-in-from-top-2 {
+  animation: tooltipFadeIn 0.3s ease-out forwards;
+}
+
+/* Smooth color transitions for tooltip text */
+.tooltip-text {
+  transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }

@@ -36,6 +36,7 @@ import { CancelSubscriptionModal } from './CancelSubscriptionModal';
 import { DeleteSubscriptionModal } from './DeleteSubscriptionModal';
 import { ReactivateSubscriptionModal } from './ReactivateSubscriptionModal';
 import { SubscriptionDetailsPage } from './SubscriptionDetailsPage';
+import { Footer } from './Footer';
 
 // Custom hook to generate alerts and listen for settings changes
 function useAlerts(subscriptions: Subscription[]): Alert[] {
@@ -85,6 +86,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   onViewDetails
 }) => {
   const [showForm, setShowForm] = useState(false);
+  const [isFormVisible, setIsFormVisible] = useState(false);
   const [editingSubscription, setEditingSubscription] = useState<Subscription | undefined>();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<Set<Category>>(new Set());
@@ -95,8 +97,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const [sortBy, setSortBy] = useState<SortBy>('nextBilling');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [showFilters, setShowFilters] = useState(false);
+  const [isFiltersAnimating, setIsFiltersAnimating] = useState(false);
+  const [filtersAnimationClass, setFiltersAnimationClass] = useState('');
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [settingsInitialSection, setSettingsInitialSection] = useState('profile');
   const [expandedCardId, setExpandedCardId] = useState<string | null>(null);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [useCategoryFolders, setUseCategoryFolders] = useState(true);
@@ -107,6 +112,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const [showDetailsPage, setShowDetailsPage] = useState(false);
   const [recentPayments, setRecentPayments] = useState<{subscription: Subscription, payment: PaymentRecord}[]>([]);
   const [adjustingPayment, setAdjustingPayment] = useState<{subscription: Subscription, payment: PaymentRecord} | null>(null);
+  const [isUserIconShaking, setIsUserIconShaking] = useState(false);
 
   useEffect(() => {
     const handleSettingsChange = () => {
@@ -248,11 +254,32 @@ export const Dashboard: React.FC<DashboardProps> = ({
   };
 
   const handleToggleFilters = () => {
-    setShowFilters(prev => !prev);
+    if (showFilters) {
+      // Closing
+      setIsFiltersAnimating(true);
+      setFiltersAnimationClass('card-details-exit');
+      
+      setTimeout(() => {
+        setShowFilters(false);
+        setIsFiltersAnimating(false);
+        setFiltersAnimationClass('');
+      }, 300);
+    } else {
+      // Opening
+      setShowFilters(true);
+      setIsFiltersAnimating(true);
+      setFiltersAnimationClass('card-details-enter');
+      
+      setTimeout(() => {
+        setIsFiltersAnimating(false);
+        setFiltersAnimationClass('');
+      }, 400);
+    }
   };
   const handleEditSubscription = (subscription: Subscription) => {
     setEditingSubscription(subscription);
     setShowForm(true);
+    setTimeout(() => setIsFormVisible(true), 10);
   };
 
   const handleSaveSubscription = (subscriptionData: Omit<Subscription, 'id' | 'createdAt' | 'updatedAt'>) => {
@@ -266,8 +293,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
   };
 
   const handleCloseForm = () => {
-    setShowForm(false);
-    setEditingSubscription(undefined);
+    setIsFormVisible(false);
+    setTimeout(() => {
+      setShowForm(false);
+      setEditingSubscription(undefined);
+    }, 300); // Délai pour l'animation de sortie
   };
 
   const handleDeleteSubscription = (id: string) => {
@@ -575,26 +605,46 @@ export const Dashboard: React.FC<DashboardProps> = ({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <img 
-                src="/images/logo.png" 
-                alt="Logo" 
-                className="h-16 w-auto"
-              />
+              <a 
+                href="/" 
+                className="transition-transform duration-300 hover:scale-105 focus:outline-none"
+                title="Retour à l'accueil"
+              >
+                <img 
+                  src="/images/logo.png" 
+                  alt="Logo SubTrack" 
+                  className="h-16 w-auto"
+                />
+              </a>
             </div>
             <div className="flex items-center space-x-4">
               <button
-                onClick={() => setShowProfileModal(true)}
-                className="p-2 text-gruvbox-fg3 hover:text-gruvbox-blue-bright rounded-lg transition-colors focus:outline-none"
+                onClick={() => {
+                  setIsUserIconShaking(true);
+                  setTimeout(() => setIsUserIconShaking(false), 600);
+                  setSettingsInitialSection('profile');
+                  setShowSettingsModal(true);
+                }}
+                className="p-2 text-gruvbox-fg3 hover:text-gruvbox-blue-bright rounded-lg transition-colors focus:outline-none group"
                 title="Profil"
               >
-                <FontAwesomeIcon icon={faUser} className="w-6 h-6" />
+                <FontAwesomeIcon 
+                  icon={faUser} 
+                  className={`w-6 h-6 transition-all duration-300 group-hover:scale-110 group-hover:rotate-12 ${isUserIconShaking ? 'animate-shake-user' : ''}`}
+                />
               </button>
               <button
-                onClick={() => setShowSettingsModal(true)}
-                className="p-2 text-gruvbox-fg3 hover:text-gruvbox-blue-bright rounded-lg transition-colors focus:outline-none"
+                onClick={() => {
+                  setSettingsInitialSection('regional');
+                  setShowSettingsModal(true);
+                }}
+                className="p-2 text-gruvbox-fg3 hover:text-gruvbox-blue-bright rounded-lg transition-colors focus:outline-none group"
                 title="Réglages"
               >
-                <FontAwesomeIcon icon={faGear} className="w-6 h-6" />
+                <FontAwesomeIcon 
+                  icon={faGear} 
+                  className="w-6 h-6 transition-transform duration-300 group-hover:-rotate-90 group-active:rotate-[360deg] group-active:duration-150" 
+                />
               </button>
               <button
                 className="p-2 text-gruvbox-fg3 hover:text-gruvbox-red-bright rounded-lg transition-colors focus:outline-none"
@@ -750,20 +800,41 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       <FontAwesomeIcon icon={faCalendarDays} className="w-4 h-4" />
                     </button>
                     <button
-                      onClick={() => handleSortChange('name')}
-                      className={`p-2 ${sortBy === 'name' ? 'bg-gruvbox-yellow text-gruvbox-fg0' : 'bg-gruvbox-bg1 text-gruvbox-fg2 hover:bg-gruvbox-bg2'} transition-colors focus:outline-none`}
+                      onClick={() => mainView !== 'calendar' && handleSortChange('name')}
+                      disabled={mainView === 'calendar'}
+                      className={`p-2 ${
+                        mainView === 'calendar' 
+                          ? 'bg-gruvbox-bg1/50 text-gruvbox-fg4/50 cursor-not-allowed' 
+                          : sortBy === 'name' 
+                            ? 'bg-gruvbox-yellow text-gruvbox-fg0' 
+                            : 'bg-gruvbox-bg1 text-gruvbox-fg2 hover:bg-gruvbox-bg2'
+                      } transition-colors focus:outline-none`}
                     >
                       <FontAwesomeIcon icon={faFont} className="w-4 h-4" />
                     </button>
                     <button
-                      onClick={() => handleSortChange('amount')}
-                      className={`p-2 ${sortBy === 'amount' ? 'bg-gruvbox-yellow text-gruvbox-fg0' : 'bg-gruvbox-bg1 text-gruvbox-fg2 hover:bg-gruvbox-bg2'} transition-colors focus:outline-none`}
+                      onClick={() => mainView !== 'calendar' && handleSortChange('amount')}
+                      disabled={mainView === 'calendar'}
+                      className={`p-2 ${
+                        mainView === 'calendar' 
+                          ? 'bg-gruvbox-bg1/50 text-gruvbox-fg4/50 cursor-not-allowed' 
+                          : sortBy === 'amount' 
+                            ? 'bg-gruvbox-yellow text-gruvbox-fg0' 
+                            : 'bg-gruvbox-bg1 text-gruvbox-fg2 hover:bg-gruvbox-bg2'
+                      } transition-colors focus:outline-none`}
                     >
                       <FontAwesomeIcon icon={faDollarSign} className="w-4 h-4" />
                     </button>
                     <button
-                      onClick={() => handleSortChange('category')}
-                      className={`p-2 rounded-r-lg ${sortBy === 'category' ? 'bg-gruvbox-yellow text-gruvbox-fg0' : 'bg-gruvbox-bg1 text-gruvbox-fg2 hover:bg-gruvbox-bg2'} transition-colors focus:outline-none`}
+                      onClick={() => mainView !== 'calendar' && handleSortChange('category')}
+                      disabled={mainView === 'calendar'}
+                      className={`p-2 rounded-r-lg ${
+                        mainView === 'calendar' 
+                          ? 'bg-gruvbox-bg1/50 text-gruvbox-fg4/50 cursor-not-allowed' 
+                          : sortBy === 'category' 
+                            ? 'bg-gruvbox-yellow text-gruvbox-fg0' 
+                            : 'bg-gruvbox-bg1 text-gruvbox-fg2 hover:bg-gruvbox-bg2'
+                      } transition-colors focus:outline-none`}
                     >
                       <FontAwesomeIcon icon={faTag} className="w-4 h-4" />
                     </button>
@@ -820,15 +891,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 </div>
 
                 {/* Expanded Filters */}
-                <AnimatePresence>
-                  {showFilters && (
-                    <motion.div 
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: 0.3 }}
-                      className="mt-4 pt-4"
-                    >
+                {(showFilters || isFiltersAnimating) && (
+                  <div className={`card-details mt-4 pt-4 ${filtersAnimationClass}`}>
                       <div className="space-y-6">
                         {/* Status Section */}
                         <div className="flex items-center space-x-3 mb-4">
@@ -972,9 +1036,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
                           </div>
                         )}
                       </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                  </div>
+                )}
               </div>
             )}
 
@@ -1258,6 +1321,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     selectedStatuses={selectedStatuses}
                     sortBy={sortBy}
                     sortDirection={sortDirection}
+                    onEdit={handleEditSubscription}
+                    onDelete={handleDeleteSubscription}
+                    onCancel={handleCancelSubscription}
+                    onReactivate={handleReactivateSubscription}
+                    onViewDetails={handleViewDetails}
                   />
                 )}
               </motion.div>
@@ -1268,8 +1336,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
           <div className="space-y-6">
             {/* Inscrire un abonnement button */}
             <motion.button
-              onClick={() => setShowForm(true)}
-              className="w-full bg-gruvbox-orange hover:bg-gruvbox-orange-bright text-gruvbox-bg0 rounded-xl shadow-lg p-6 flex items-center justify-center space-x-4 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-gruvbox-green-bright/50"
+              onClick={() => {
+                setShowForm(true);
+                setTimeout(() => setIsFormVisible(true), 10);
+              }}
+              className="w-full bg-gruvbox-orange hover:bg-gruvbox-orange-bright text-gruvbox-bg0 rounded-xl shadow-lg p-6 flex items-center justify-center space-x-4 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl focus:outline-none"
               transition={{ duration: 0.3, delay: 0.4 }}
             >
               <FontAwesomeIcon icon={faPlus} className="w-6 h-6 text-gruvbox-bg0" />
@@ -1305,6 +1376,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
           subscription={editingSubscription}
           onSave={handleSaveSubscription}
           onClose={handleCloseForm}
+          isVisible={isFormVisible}
+          onOpenSettings={(section) => {
+            setSettingsInitialSection(section);
+            setShowSettingsModal(true);
+          }}
         />
       )}
 
@@ -1315,7 +1391,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
       {/* Settings Modal */}
       {showSettingsModal && (
-        <SettingsModal onClose={() => setShowSettingsModal(false)} />
+        <SettingsModal 
+          onClose={() => setShowSettingsModal(false)} 
+          initialSection={settingsInitialSection}
+        />
       )}
 
       {/* Cancel Subscription Modal */}
@@ -1363,6 +1442,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
           onClose={() => setAdjustingPayment(null)}
         />
       )}
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 };

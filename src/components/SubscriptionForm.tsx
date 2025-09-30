@@ -23,12 +23,16 @@ interface SubscriptionFormProps {
   subscription?: Subscription;
   onSave: (subscription: Omit<Subscription, 'id' | 'createdAt' | 'updatedAt'>) => void;
   onClose: () => void;
+  isVisible: boolean;
+  onOpenSettings?: (section: string) => void;
 }
 
 export const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
   subscription,
   onSave,
-  onClose
+  onClose,
+  isVisible,
+  onOpenSettings
 }) => {
   const [formData, setFormData] = useState({
     name: '',
@@ -41,7 +45,7 @@ export const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
     isTrialPeriod: false,
     trialEndDate: '',
     paymentMethod: '',
-    isAutomaticPayment: true,
+    isAutomaticPayment: undefined as boolean | undefined,
     url: '',
     logoUrl: '',
     primaryColor: '',
@@ -55,13 +59,19 @@ export const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
   const [enabledPaymentMethods, setEnabledPaymentMethods] = useState<string[]>([]);
   const settings = useAppSettings();
 
-  // Disable background scroll when modal is open
+  // Animation effect - Prevent background scroll when modal is open
   useEffect(() => {
-    document.body.style.overflow = 'hidden';
+    if (isVisible) {
+      document.body.classList.add('modal-open');
+    } else {
+      document.body.classList.remove('modal-open');
+    }
+    
     return () => {
-      document.body.style.overflow = 'unset';
+      // Always ensure body is scrollable when component unmounts
+      document.body.classList.remove('modal-open');
     };
-  }, []);
+  }, [isVisible]);
 
   useEffect(() => {
     if (subscription) {
@@ -225,40 +235,60 @@ export const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
     }
   };
 
+  const handleClose = () => {
+    // Ensure body is scrollable before closing
+    document.body.style.overflow = '';
+    onClose();
+  };
+
   return (
-    <div className="fixed inset-0 bg-gruvbox-bg0-hard bg-opacity-80 flex items-center justify-center z-50 p-4">
-      <div className="custom-scrollbar max-w-2xl w-full" style={{ maxHeight: '90vh', overflowY: 'auto' }}>
-        <div className="bg-gruvbox-bg0 rounded-xl shadow-xl">
-        <div className="p-4 rounded-t-xl relative bg-gruvbox-blue">
+    <>
+      {/* Backdrop */}
+      <div
+        className={`fixed inset-0 bg-black bg-opacity-50 z-50 transition-opacity duration-300 ${
+          isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={handleClose}
+      />
+      
+      {/* Slide-in panel */}
+      <div
+        className={`fixed inset-y-0 right-0 w-full md:w-1/2 lg:w-2/5 xl:w-1/3 bg-gruvbox-bg0 text-gruvbox-fg1 shadow-xl z-50 transition-transform duration-300 transform ${
+          isVisible ? 'translate-x-0' : 'translate-x-[100%]'
+        } flex flex-col modal-container`}
+      >
+        {/* Header */}
+        <div className="p-4 border-b border-gruvbox-bg1 relative bg-gruvbox-blue">
           {/* Matte overlay */}
-          <div className="absolute inset-0 bg-black bg-opacity-20 rounded-t-xl"></div>
+          <div className="absolute inset-0 bg-black bg-opacity-20"></div>
           
           {/* Gradient overlay */}
           <div 
-            className="absolute inset-0 rounded-t-xl"
+            className="absolute inset-0"
             style={{
               background: `linear-gradient(to right, rgba(22, 24, 25, 0.4) 0%, rgba(22, 24, 25, 0.6) 50%, rgba(22, 24, 25, 0.4) 100%)`
             }}
           ></div>
           
-          {/* Content */}
           <div className="flex items-center justify-between relative z-10">
             <div className="flex items-center space-x-3">
               <FontAwesomeIcon icon={faPlus} className="w-5 h-5 text-gruvbox-fg0" />
-              <h2 className="text-lg font-normal text-gruvbox-fg0">
+              <h2 className="text-xl font-normal text-gruvbox-fg0">
                 {subscription ? 'Modifier l\'abonnement' : 'Nouvel abonnement'}
               </h2>
             </div>
             <button
-              onClick={onClose}
-              className="p-2 text-gruvbox-fg0 hover:text-gruvbox-fg0 opacity-80 hover:opacity-100 rounded-lg transition-all focus:outline-none"
+              onClick={handleClose}
+              className="p-2 text-gruvbox-fg0 hover:text-gruvbox-fg1 transition-colors focus:outline-none"
             >
               <FontAwesomeIcon icon={faXmark} className="w-5 h-5" />
             </button>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto scrollbar-hide">
+          <form id="subscription-form" onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Basic Information */}
           <div className="space-y-4">
             <div className="flex items-center space-x-4">
@@ -303,11 +333,20 @@ export const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
                 />
                 <button
                   type="button"
-                  onClick={() => setShowCategoryManager(true)}
-                  className="px-3 py-3 bg-gruvbox-bg1 text-gruvbox-fg2 rounded-lg hover:bg-gruvbox-bg2 hover:text-gruvbox-blue-bright transition-colors focus:outline-none flex items-center space-x-1"
+                  onClick={() => {
+                    if (onOpenSettings) {
+                      onOpenSettings('categories');
+                    } else {
+                      setShowCategoryManager(true);
+                    }
+                  }}
+                  className="px-3 py-3 bg-gruvbox-bg1 text-gruvbox-fg2 rounded-lg hover:bg-gruvbox-bg2 hover:text-gruvbox-blue-bright transition-colors focus:outline-none flex items-center space-x-1 group"
                   title="Gérer les catégories"
                 >
-                  <FontAwesomeIcon icon={faGear} className="w-4 h-4" />
+                  <FontAwesomeIcon 
+                    icon={faGear} 
+                    className="w-4 h-4 transition-transform duration-300 group-hover:-rotate-90 group-active:rotate-[360deg] group-active:duration-150" 
+                  />
                 </button>
               </div>
             </div>
@@ -358,6 +397,33 @@ export const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
                 </span>
               </div>
 
+              <div className="flex items-center space-x-4">
+                <CustomSelect
+                  options={getPaymentMethodOptions()}
+                  value={formData.paymentMethod}
+                  onChange={(value) => handleChange('paymentMethod', value)}
+                  placeholder="Méthode de paiement"
+                  className="flex-1"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (onOpenSettings) {
+                      onOpenSettings('payment');
+                    }
+                  }}
+                  className="px-3 py-3 bg-gruvbox-bg1 text-gruvbox-fg2 rounded-lg hover:bg-gruvbox-bg2 hover:text-gruvbox-blue-bright transition-colors focus:outline-none flex items-center space-x-1 group"
+                  title="Gérer les modes de paiement"
+                >
+                  <FontAwesomeIcon 
+                    icon={faGear} 
+                    className="w-4 h-4 transition-transform duration-300 group-hover:-rotate-90 group-active:rotate-[360deg] group-active:duration-150" 
+                  />
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <CustomSelect
                   options={Object.entries(frequencyLabels).map(([key, label]) => ({
@@ -367,6 +433,18 @@ export const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
                   value={formData.frequency}
                   onChange={(value) => handleChange('frequency', value)}
                   placeholder="Fréquence des paiements"
+                />
+              </div>
+
+              <div>
+                <CustomSelect
+                  options={[
+                    { value: 'true', label: 'Prélèvement automatique' },
+                    { value: 'false', label: 'Paiement manuel' }
+                  ]}
+                  value={formData.isAutomaticPayment !== undefined ? formData.isAutomaticPayment.toString() : ''}
+                  onChange={(value) => handleChange('isAutomaticPayment', value === 'true')}
+                  placeholder="Type de paiement"
                 />
               </div>
             </div>
@@ -432,65 +510,16 @@ export const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
               <hr className="flex-1 border-gruvbox-bg2" />
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <CustomSelect
-                  options={getPaymentMethodOptions()}
-                  value={formData.paymentMethod}
-                  onChange={(value) => handleChange('paymentMethod', value)}
-                  placeholder="Méthode de paiement (optionnel)"
-                />
-              </div>
-
-              <div>
-                <input
-                  type="url"
-                  value={formData.url}
-                  onChange={(e) => handleChange('url', e.target.value)}
-                  className={`w-full px-3 py-2 bg-gruvbox-bg1 rounded-lg focus:ring-2 focus:ring-gruvbox-blue-bright text-gruvbox-fg1 placeholder-gruvbox-fg4 border-0 focus:outline-none ${
-                    errors.url ? 'bg-red-900 bg-opacity-20' : ''
-                  }`}
-                  placeholder="URL du fournisseur"
-                />
-              </div>
-            </div>
-            
-            {/* Type de paiement */}
-            <div className="space-y-2">
-              <label className="text-sm text-gruvbox-fg2 block">Type de paiement</label>
-              <div className="flex space-x-4">
-                <div className="flex items-center">
-                  <input
-                    type="radio"
-                    id="automatic-payment"
-                    name="payment-type"
-                    checked={formData.isAutomaticPayment}
-                    onChange={() => handleChange('isAutomaticPayment', true)}
-                    className="mr-2 h-4 w-4 text-gruvbox-blue-bright focus:ring-gruvbox-blue-bright"
-                  />
-                  <label htmlFor="automatic-payment" className="text-sm text-gruvbox-fg1">
-                    Prélèvement automatique
-                  </label>
-                </div>
-                <div className="flex items-center">
-                  <input
-                    type="radio"
-                    id="manual-payment"
-                    name="payment-type"
-                    checked={!formData.isAutomaticPayment}
-                    onChange={() => handleChange('isAutomaticPayment', false)}
-                    className="mr-2 h-4 w-4 text-gruvbox-blue-bright focus:ring-gruvbox-blue-bright"
-                  />
-                  <label htmlFor="manual-payment" className="text-sm text-gruvbox-fg1">
-                    Paiement manuel
-                  </label>
-                </div>
-              </div>
-              <p className="text-xs text-gruvbox-fg3 mt-1">
-                {formData.isAutomaticPayment 
-                  ? "Le paiement est prélevé automatiquement à la date d'échéance" 
-                  : "Le paiement doit être effectué manuellement"}
-              </p>
+            <div>
+              <input
+                type="url"
+                value={formData.url}
+                onChange={(e) => handleChange('url', e.target.value)}
+                className={`w-full px-3 py-2 bg-gruvbox-bg1 rounded-lg focus:ring-2 focus:ring-gruvbox-blue-bright text-gruvbox-fg1 placeholder-gruvbox-fg4 border-0 focus:outline-none ${
+                  errors.url ? 'bg-red-900 bg-opacity-20' : ''
+                }`}
+                placeholder="URL du fournisseur"
+              />
             </div>
 
             <div>
@@ -504,10 +533,12 @@ export const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
             </div>
 
           </div>
+          </form>
+        </div>
 
-          {/* Actions */}
-          <div className="border-t border-gruvbox-bg2 mt-2"></div>
-          <div className="flex justify-end space-x-3 pt-2">
+        {/* Fixed Footer with Actions */}
+        <div className="border-t border-gruvbox-bg1 p-4 bg-gruvbox-bg0">
+          <div className="flex justify-end space-x-3">
             <button
               type="button"
               onClick={onClose}
@@ -517,13 +548,13 @@ export const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
             </button>
             <button
               type="submit"
+              form="subscription-form"
               className="flex items-center space-x-2 px-4 py-2 text-sm font-normal text-gruvbox-fg0 bg-gruvbox-blue rounded-lg hover:bg-gruvbox-blue-bright transition-colors focus:outline-none"
             >
               <FontAwesomeIcon icon={faFloppyDisk} className="w-4 h-4" />
               <span>{subscription ? 'Modifier' : 'Ajouter'}</span>
             </button>
           </div>
-        </form>
         </div>
       </div>
 
@@ -531,6 +562,6 @@ export const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
       {showCategoryManager && (
         <CategoryManager onClose={() => setShowCategoryManager(false)} />
       )}
-    </div>
+    </>
   );
 };
